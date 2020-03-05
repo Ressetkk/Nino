@@ -27,3 +27,9 @@ func DownloadFile(entry *DownloadEntry) error {
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
+
+func AddToQueue(w http.ResponseWriter, r *http.Request) {
+	b := []byte{}
+	r.Body.Read(b)
+	w.Write(b)
+}
