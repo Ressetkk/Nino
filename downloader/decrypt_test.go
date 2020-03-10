@@ -3,6 +3,8 @@ package downloader
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"testing"
 )
 
@@ -28,4 +30,17 @@ func TestDecryptSecurityKey(t *testing.T) {
 			t.Errorf("nonce/wantedNonce mismatch!\nGot: %x\nWanted: %x\n", nonce, wantedNonce)
 		}
 	})
+}
+
+func TestTidalDecrypter_Write(t *testing.T) {
+	// TODO write test for fake encrypted file and key pair
+	f, _ := os.Open("Zettai Zetsumei-e")
+	defer f.Close()
+	out, _ := os.Create("ZT-dec.flac")
+	defer out.Close()
+	key, nonce, _ := DecryptSecurityKey("0c1BiPpbtfNvUX+28tFZnng2dHoBIGcx/u31jUnchAypcnnbdZ6ab9/qGBV46tb1")
+	d := NewReader(f, key, nonce)
+	if _, err := io.Copy(out, d); err != nil {
+		t.Errorf("Caught an error %v\n", err)
+	}
 }
