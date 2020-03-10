@@ -29,8 +29,20 @@ func NewReader(r io.Reader, key, nonce []byte) io.Reader {
 		decipher: d,
 	}
 }
+
+// Read reads and decrypts incoming Reader.
+// It's used for decrypting audio stream
 func (d *TidalDecipher) Read(p []byte) (n int, err error) {
 	n, err = d.reader.Read(p)
+
+	// if finished reading reader
+	if err == io.EOF {
+		return
+	}
+	// if something went wrong
+	if err != nil {
+		return 0, err
+	}
 	d.decipher.XORKeyStream(p, p)
 	return
 }
