@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// TODO edit this struct to match the final resource
 type DownloadEntry struct {
 	streamUrl,
 	coverUrl,
@@ -14,6 +15,7 @@ type DownloadEntry struct {
 	title string
 }
 
+// TODO write proper downloading functions based on a resource
 func DownloadFile(entry *DownloadEntry) error {
 	resp, err := http.Get(entry.streamUrl)
 	if err != nil {

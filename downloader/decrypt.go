@@ -19,9 +19,7 @@ type TidalDecipher struct {
 
 func NewReader(r io.Reader, key, nonce []byte) io.Reader {
 	iv := make([]byte, aes.BlockSize)
-	for i, v := range nonce {
-		iv[i] = v
-	}
+	copy(iv, nonce)
 	c, _ := aes.NewCipher(key)
 	d := cipher.NewCTR(c, iv)
 	return &TidalDecipher{
@@ -50,30 +48,30 @@ func (d *TidalDecipher) Read(p []byte) (n int, err error) {
 func DecryptSecurityKey(securityToken string) (key, nonce []byte, e error) {
 	decodedMasterKey, err := base64.StdEncoding.DecodeString(MasterKey)
 	if err != nil {
-		e = fmt.Errorf("base64 decoding error %w", err)
-		return
+		return key, nonce, fmt.Errorf("base64 decoding error %w", err)
 	}
 	log.Debugf("Decoded MasterKey: %x\n", decodedMasterKey)
 	decodedSecurityToken, err := base64.StdEncoding.DecodeString(securityToken)
 	if err != nil {
-		e = fmt.Errorf("base64 decoding error %w", err)
-		return
+		return key, nonce, fmt.Errorf("base64 decoding error %w", err)
 	}
 	log.Debugf("Decoded SecurityKey: %x\n", decodedSecurityToken)
 
-	iv := decodedSecurityToken[:16]
-	encryptedSt := decodedSecurityToken[16:]
+	iv := decodedSecurityToken[:aes.BlockSize]
+	encryptedSt := decodedSecurityToken[aes.BlockSize:]
 	log.Debugf("%x | %x", iv, encryptedSt)
 
-	var decrypter cipher.BlockMode
-	if d, err := aes.NewCipher(decodedMasterKey); err == nil {
-		decrypter = cipher.NewCBCDecrypter(d, iv)
+	var decipher cipher.BlockMode
+	if d, err := aes.NewCipher(decodedMasterKey); err != nil {
+		return key, nonce, err
+	} else {
+		decipher = cipher.NewCBCDecrypter(d, iv)
 	}
 	decryptedData := make([]byte, 32)
-	decrypter.CryptBlocks(decryptedData, encryptedSt)
+	decipher.CryptBlocks(decryptedData, encryptedSt)
 	log.Debugf("%x", decryptedData)
-	key = decryptedData[:16]
-	nonce = decryptedData[16:24]
 
+	key = decryptedData[:aes.BlockSize]
+	nonce = decryptedData[aes.BlockSize:24]
 	return
 }
