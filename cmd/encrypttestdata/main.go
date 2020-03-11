@@ -56,7 +56,7 @@ func encryptFlac(file string) (string, []byte, error) {
 	if _, err := rand.Read(secKey[:24]); err != nil {
 		return "", nil, err
 	}
-	fmt.Printf("Got a key: %x\n", secKey)
+	fmt.Printf("Got a key: %#v\n", secKey)
 	c, _ := aes.NewCipher(secKey[:16])
 	cip := cipher.NewCTR(c, secKey[16:])
 
@@ -73,22 +73,15 @@ func encryptFlac(file string) (string, []byte, error) {
 
 func encryptKey(k []byte) string {
 	decodedMasterKey, _ := base64.StdEncoding.DecodeString(masterKey)
-	iv := make([]byte, 16)
-	_, _ = rand.Read(iv)
 	cip, _ := aes.NewCipher(decodedMasterKey)
-	enc := cipher.NewCBCEncrypter(cip, iv)
-	encryptedData := make([]byte, 64)
-	dataToEncrypt := make([]byte, 64)
-	for i, v := range k {
-		dataToEncrypt[i] = v
-	}
-	for i, v := range iv {
-		dataToEncrypt[i+16] = v
-	}
-	enc.CryptBlocks(encryptedData, dataToEncrypt)
 
-	securityKey := make([]byte, 32)
-	copy(securityKey, encryptedData)
-	fmt.Printf("%x\n", securityKey)
+	securityKey := make([]byte, aes.BlockSize+len(k))
+	iv := securityKey[:aes.BlockSize]
+	_, _ = rand.Read(iv)
+
+	enc := cipher.NewCBCEncrypter(cip, iv)
+	enc.CryptBlocks(securityKey[aes.BlockSize:], k)
+
+	fmt.Printf("%#v\n", securityKey)
 	return base64.StdEncoding.EncodeToString(securityKey)
 }
