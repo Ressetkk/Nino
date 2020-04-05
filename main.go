@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/Ressetkk/nino/config"
 	"github.com/Ressetkk/nino/downloader"
+	"github.com/Ressetkk/nino/internal/db"
+	"github.com/Ressetkk/nino/music"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -16,10 +18,21 @@ func Hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	r := mux.NewRouter()
-	api := r.PathPrefix("/api/v1").Subrouter()
-
-	downloader.InitDownloaderRouters(api)
+	err := db.InitDBConnection()
+	if err != nil {
+		log.Fatalf("Could not establish connection to database: %v\n", err)
+	} else {
+		log.Info("Successfully connected to database.")
+	}
+	r := NewRouter()
 	log.Infof("Server listening on %s\n", ":8080")
 	_ = http.ListenAndServe(":8080", r)
+}
+
+func NewRouter() *mux.Router {
+	r := mux.NewRouter().PathPrefix("/v1").Subrouter()
+	downloader.AddRouter(r)
+	music.AddRouter(r)
+	r.Headers("Content-Type", "application/json")
+	return r
 }
