@@ -47,7 +47,6 @@ func AddRouter(r *mux.Router) *mux.Router {
 }
 
 func getAlbums(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	collection := db.GetCollection("music")
 	cur, err := collection.Find(context.TODO(), bson.D{{}}, options.Find())
 	if err != nil {
