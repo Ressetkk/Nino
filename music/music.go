@@ -3,15 +3,13 @@ package music
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/Ressetkk/nino/internal/db"
-	"github.com/Ressetkk/nino/internal/helpers"
+	"github.com/clevergo/jsend"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"io"
 	"net/http"
 )
 
@@ -40,25 +38,24 @@ func AddRouter(r *mux.Router) *mux.Router {
 	s := r.PathPrefix("/music").Subrouter()
 	s.HandleFunc("/albums", getAlbums).Methods("GET")
 	s.HandleFunc("/albums", addAlbum).Methods("POST")
-	s.HandleFunc("/albums/{id:[0-9]+}", getAlbumInfo).Methods("GET")
-	s.HandleFunc("/albums/albums/{id:[0-9]+}", editAlbum).Methods("PUT", "DELETE")
-	s.HandleFunc("/albums/{id:[0-9]+}/tracks", getAlbumTracks).Methods("GET")
+	s.HandleFunc("/albums/{id:[a-f0-9]+}", getAlbumInfo).Methods("GET")
+	s.HandleFunc("/albums/albums/{id:[a-f0-9]+}", editAlbum).Methods("PATCH", "DELETE")
+	s.HandleFunc("/albums/{id:[a-f0-9]+}/tracks", getAlbumTracks).Methods("GET")
 	return s
 }
 
+// TODO write helper methods for error handling
+// TODO write context with timeout for timing out on requests
 func getAlbums(w http.ResponseWriter, r *http.Request) {
 	collection := db.GetCollection("music")
 	cur, err := collection.Find(context.TODO(), bson.D{{}}, options.Find())
 	if err != nil {
-		log.Error(helpers.WriteErrorResponse(w, http.StatusBadRequest, err))
-		return
-	}
-	defer func() {
-		if err := cur.Close(context.TODO()); err != nil {
+		if err := jsend.Error(w, err.Error(), http.StatusBadRequest); err != nil {
 			log.Error(err)
 		}
-	}()
-
+		return
+	}
+	defer db.Close(cur, context.TODO())
 	var albums []*Album
 	for cur.Next(context.TODO()) {
 		var elem Album
@@ -67,27 +64,45 @@ func getAlbums(w http.ResponseWriter, r *http.Request) {
 		}
 		albums = append(albums, &elem)
 	}
-	resp, err := json.Marshal(albums)
-	if err != nil {
-		log.Error(helpers.WriteErrorResponse(w, http.StatusInternalServerError, err))
-		return
+
+	if err := jsend.Success(w, albums); err != nil {
+		log.Error(err)
 	}
-	w.Write(resp)
 }
 
 func addAlbum(w http.ResponseWriter, r *http.Request) {
+	var album Album
+	err := json.NewDecoder(r.Body).Decode(&album)
+	if err != nil {
+		log.Error(err)
+	}
 
 }
 
 func getAlbumInfo(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
-	fmt.Println(id)
-	io.WriteString(w, id)
+	objId, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": objId}
+	collection := db.GetCollection("music")
+	obj := collection.FindOne(context.TODO(), filter, options.FindOne())
+	var album Album
+	if err := obj.Decode(&album); err != nil {
+		log.Error(err)
+		if err := jsend.Error(w, err.Error(), http.StatusBadRequest); err != nil {
+			log.Error(err)
+		}
+		return
+	}
+	if err := jsend.Success(w, album); err != nil {
+		log.Error(err)
+	}
 }
 
 func editAlbum(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "PATCH" {
 
+	}
 }
 
 func getAlbumTracks(w http.ResponseWriter, r *http.Request) {

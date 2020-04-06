@@ -32,3 +32,9 @@ func InitDBConnection() error {
 func GetCollection(collection string) *mongo.Collection {
 	return db.Collection(collection)
 }
+
+func Close(cursor *mongo.Cursor, ctx context.Context) {
+	if err := cursor.Close(ctx); err != nil {
+		log.Error(err)
+	}
+}
