@@ -13,8 +13,12 @@ import (
 	"net/http"
 )
 
+const (
+	collection = "music"
+)
+
 type Album struct {
-	Id           primitive.ObjectID `json:"_id" bson:"_id"`
+	Id           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Title        string             `json:"title" bson:"title"`
 	ReleaseDate  primitive.DateTime `json:"release_date" bson:"release_date"`
 	Path         string             `json:"path" bson:"path"`
@@ -39,7 +43,7 @@ func AddRouter(r *mux.Router) *mux.Router {
 	s.HandleFunc("/albums", getAlbums).Methods("GET")
 	s.HandleFunc("/albums", addAlbum).Methods("POST")
 	s.HandleFunc("/albums/{id:[a-f0-9]+}", getAlbumInfo).Methods("GET")
-	s.HandleFunc("/albums/albums/{id:[a-f0-9]+}", editAlbum).Methods("PATCH", "DELETE")
+	s.HandleFunc("/albums/{id:[a-f0-9]+}", editAlbum).Methods("PATCH", "DELETE")
 	s.HandleFunc("/albums/{id:[a-f0-9]+}/tracks", getAlbumTracks).Methods("GET")
 	return s
 }
@@ -47,7 +51,7 @@ func AddRouter(r *mux.Router) *mux.Router {
 // TODO write helper methods for error handling
 // TODO write context with timeout for timing out on requests
 func getAlbums(w http.ResponseWriter, r *http.Request) {
-	collection := db.GetCollection("music")
+	collection := db.GetCollection(collection)
 	cur, err := collection.Find(context.TODO(), bson.D{{}}, options.Find())
 	if err != nil {
 		if err := jsend.Error(w, err.Error(), http.StatusBadRequest); err != nil {
@@ -76,7 +80,8 @@ func addAlbum(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err)
 	}
-
+	collection := db.GetCollection(collection)
+	collection.InsertOne(context.TODO(), album, options.InsertOne())
 }
 
 func getAlbumInfo(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +89,7 @@ func getAlbumInfo(w http.ResponseWriter, r *http.Request) {
 	id := params["id"]
 	objId, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.M{"_id": objId}
-	collection := db.GetCollection("music")
+	collection := db.GetCollection(collection)
 	obj := collection.FindOne(context.TODO(), filter, options.FindOne())
 	var album Album
 	if err := obj.Decode(&album); err != nil {

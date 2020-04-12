@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/clevergo/jsend v1.1.0
+	github.com/golang-migrate/migrate/v4 v4.10.0 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

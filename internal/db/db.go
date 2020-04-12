@@ -38,3 +38,7 @@ func Close(cursor *mongo.Cursor, ctx context.Context) {
 		log.Error(err)
 	}
 }
+
+func GetDatabase() *mongo.Database {
+	return db
+}
