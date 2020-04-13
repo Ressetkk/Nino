@@ -1,0 +1,50 @@
+[
+  {
+    "create": "albumInfo",
+    "viewOn": "musicAlbums",
+    "pipeline": [
+        {
+        "$lookup" : {
+          "from": "musicArtists",
+          "localField": "artist_id",
+          "foreignField": "_id",
+          "as": "artist"
+        }
+      }, {
+        "$project": {
+          "artist_id": 0,
+          "artist.bio": 0,
+          "artist.picture_url": 0
+        }
+      }, {
+        "$unwind": {
+          "path": "$artist"
+        }
+      }
+    ]
+  },
+  {
+    "create": "tracksInfo",
+    "viewOn": "musicTracks",
+    "pipeline": [
+      {
+        "$lookup" : {
+          "from": "musicAlbums",
+          "localField": "album_id",
+          "foreignField": "_id",
+          "as": "album"
+        }
+      }, {
+        "$project": {
+          "album_id": 0,
+          "album.bio": 0,
+          "artist.picture_url": 0
+        }
+      }, {
+        "$unwind": {
+          "path": "$album"
+        }
+      }
+    ]
+  }
+]

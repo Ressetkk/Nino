@@ -1,0 +1,14 @@
+[
+  {
+    "dropIndexes": "musicAlbums",
+    "index": "album_details"
+  },
+  {
+    "dropIndexes": "musicArtists",
+    "index": "artist_details"
+  },
+  {
+    "dropIndexes": "musicTracks",
+    "index": "track_details"
+  }
+]

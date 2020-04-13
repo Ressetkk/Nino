@@ -12,6 +12,9 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	_ "github.com/golang-migrate/migrate/v4/database/mongodb"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -22,13 +25,6 @@ func main() {
 		log.Info("Successfully connected to database.")
 	}
 
-	//m, err := migrate.New("file://migrations", os.Getenv("MONGO_URI")+"/nino_db")
-	//if err != nil {
-	//	log.Fatalf("migration error: ", err)
-	//}
-	//if err := m.Up(); err != nil {
-	//	log.Error(err)
-	//}
 	r := NewRouter()
 
 	srv := http.Server{
@@ -51,18 +47,22 @@ func main() {
 
 func NewRouter() *mux.Router {
 	r := mux.NewRouter().PathPrefix("/v1").Subrouter()
+	r.HandleFunc("/health", func(writer http.ResponseWriter, request *http.Request) {
+		if err := jsend.Success(writer, map[string]string{"status": "ok"}); err != nil {
+			log.Error(err)
+		}
+	})
 	downloader.AddRouter(r)
 	music.AddRouter(r)
-
 	r.NotFoundHandler = r.NewRoute().HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusNotFound)
-		jsend.Error(writer, "Not found")
+		jsend.Error(writer, "not found", http.StatusNotFound)
 	}).GetHandler()
 
 	r.MethodNotAllowedHandler = r.NewRoute().HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusMethodNotAllowed)
-		jsend.Error(writer, "Method not allowed")
+		jsend.Error(writer, "method not allowed", http.StatusMethodNotAllowed)
 	}).GetHandler()
+
 	r.Use(logging.Middleware)
+
 	return r
 }

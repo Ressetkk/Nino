@@ -1,0 +1,96 @@
+[
+  {
+    "create": "musicAlbums"
+  },
+  {
+    "create": "musicArtists"
+  },
+  {
+    "create": "musicTracks"
+  },
+  {
+    "collMod": "musicAlbums",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["title", "release_date", "artist_id", "num_of_tracks"],
+        "properties": {
+          "title": {
+            "bsonType": "string",
+            "description": "album title must be a string and required"
+          },
+          "path": {
+            "bsonType": "string",
+            "description": "path must be type string"
+          },
+          "num_of_tracks": {
+            "bsonType": "int",
+            "description": "must be type int and required"
+          },
+          "album_art_url": {
+            "bsonType": "string",
+            "description": "must be type string"
+          },
+          "release_date": {
+            "bsonType": "date",
+            "description": "must be type date and required"
+          },
+          "artist_id": {
+            "bsonType": "objectId",
+            "description": "artist_id must be type objectId and required"
+          }
+        }
+      }
+    }
+  },
+  {
+    "collMod": "musicArtists",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["name", "bio"],
+        "properties": {
+          "name": {
+            "bsonType": "string",
+            "description": "name must be type of string and required"
+          },
+          "bio": {
+            "bsonType": "string",
+            "description": "bio must be type of string and required"
+          },
+          "picture_url": {
+            "bsonType": "string",
+            "description": "picture_url must be type of string"
+          }
+        }
+      }
+    }
+  },
+  {
+    "collMod": "musicTracks",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["title", "album_id", "track_number"],
+        "properties": {
+          "title": {
+            "bsonType": "string",
+            "description": "title must be type of string and required"
+          },
+          "track_number": {
+            "bsonType": "int",
+            "description": "track_number must be type of int and required"
+          },
+          "album_id": {
+            "bsonType": "objectId",
+            "description": "album_id must be type of objectId and required"
+          },
+          "path": {
+            "bsonType": "string",
+            "description": "path must be type of string"
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,43 @@
+[
+  {
+    "createIndexes": "musicAlbums",
+    "indexes": [
+      {
+        "key": {
+          "title": 1,
+          "release_date": 1,
+          "artist_id": 1
+        },
+        "name": "album_details",
+        "unique": true
+      }
+    ]
+  },
+  {
+    "createIndexes": "musicArtists",
+    "indexes": [
+      {
+        "key": {
+          "name": 1,
+          "bio": 1
+        },
+        "name": "artist_details",
+        "unique": true
+      }
+    ]
+  },
+  {
+    "createIndexes": "musicTracks",
+    "indexes": [
+      {
+        "key": {
+          "title": 1,
+          "track_number": 1,
+          "album_id": 1
+        },
+        "name": "track_details",
+        "unique": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+[
+  {
+    "drop": "musicAlbums"
+  },
+  {
+    "drop": "musicArtists"
+  },
+  {
+    "drop": "musicTracks"
+  }
+]

@@ -1,7 +1,9 @@
 package logging
 
 import (
+	"github.com/clevergo/jsend"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"time"
 )
@@ -29,7 +31,7 @@ func Wrap(w http.ResponseWriter) *statusWriter {
 }
 
 const (
-	ApacheFormatPattern = "%s - - [%s %s %s] \"%s %d %d\"\n"
+	ApacheFormatPattern = `%s - - [%s] "%s %s %s" %d %d\n`
 )
 
 func Middleware(h http.Handler) http.Handler {
@@ -39,4 +41,22 @@ func Middleware(h http.Handler) http.Handler {
 
 		log.Infof(ApacheFormatPattern, r.RemoteAddr, time.Now().UTC(), r.Method, r.URL, r.Proto, sw.Status, sw.ResponseSize)
 	})
+}
+
+type ErrorHandler func(http.ResponseWriter, *http.Request) error
+
+func (eh ErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	err := eh(w, r)
+	if err == nil {
+		return
+	} else {
+		log.Errorf("caught an error: %v", err)
+		// TODO error handling
+		if merr, ok := err.(mongo.WriteException); ok {
+			switch merr.WriteErrors[0].Code {
+			case 11000:
+				jsend.Error(w, "duplicate found", http.StatusBadRequest)
+			}
+		}
+	}
 }
